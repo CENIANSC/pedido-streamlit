@@ -3,8 +3,27 @@ import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
 
+from supabase import create_client
+import streamlit as st
+
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+
+supabase = create_client(url, key)
+
+
 # Leer archivo Excel
 df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
+
+if st.button("Subir productos a Supabase"):
+    for _, row in df.iterrows():
+        supabase.table("productos").insert({
+            "producto": row["producto"],
+            "lugar": row["lugar"],
+            "categoria": row["categoría"]
+        }).execute()
+
+    st.success("Productos cargados correctamente.")
 
 st.title("Revisión de Pedido")
 
