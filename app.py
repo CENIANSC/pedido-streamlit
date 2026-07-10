@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
+from datetime import datetime
 
-# Leer Excel
+# Leer archivo Excel
 df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 
 st.title("Revisión de Pedido")
 
+# Crear opciones de selección
 selecciones = []
 for i, row in df.iterrows():
     decision = st.radio(
@@ -17,44 +19,78 @@ for i, row in df.iterrows():
     )
     selecciones.append(decision)
 
+# Generar orden de compra
 if st.button("Generar Orden de Compra"):
+
+    # Agregar selecciones al DataFrame
     df["Seleccion"] = selecciones
+
+    # Filtrar únicamente los productos seleccionados
     seleccionados = df[df["Seleccion"] == "SÍ"]
 
-    # Crear PDF agrupado por lugar
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    if seleccionados.empty:
+        st.warning("No se seleccionó ningún producto.")
+    else:
+        # --------------------------
+        # Crear PDF
+        # --------------------------
+        pdf = FPDF()
+        pdf.add_page()
 
-    pdf.cell(200, 10, "ORDEN DE COMPRA", ln=True, align="C")
-    pdf.ln(5)
+        # Título
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, "ORDEN DE COMPRA", ln=True, align="C")
 
-    for lugar, grupo in seleccionados.groupby("lugar"):
-        pdf.set_font("Arial", "B", 12)
-        pdf.cell(200, 10, f"Lugar: {lugar}", ln=True)
+        # Fecha en formato formal
+        meses = {
+            1: "enero",
+            2: "febrero",
+            3: "marzo",
+            4: "abril",
+            5: "mayo",
+            6: "junio",
+            7: "julio",
+            8: "agosto",
+            9: "septiembre",
+            10: "octubre",
+            11: "noviembre",
+            12: "diciembre"
+        }
 
-        pdf.set_font("Arial", size=12)
-        for _, r in grupo.iterrows():
-            # Solo mostrar producto
-            pdf.cell(200, 8, f"- {r['producto']}", ln=True)
+        hoy = datetime.now()
+        fecha_formal = f"{hoy.day} de {meses[hoy.month]} de {hoy.year}"
 
-        pdf.ln(5)
+        pdf.set_font("Arial", "", 12)
+        pdf.cell(0, 8, f"Fecha: {fecha_formal}", ln=True, align="C")
+        pdf.ln(10)
 
-    # Generar PDF en memoria
-    pdf_bytes = pdf.output(dest="S").encode("latin1")
+        # Productos agrupados por lugar
+        for lugar, grupo in seleccionados.groupby("lugar"):
 
-    st.success("Orden de compra generada correctamente.")
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(0, 8, f"Lugar: {lugar}", ln=True)
 
-    # Botón para descargar PDF
-    st.download_button(
-        label="Descargar Orden de Compra PDF",
-        data=pdf_bytes,
-        file_name="OrdenCompra.pdf",
-        mime="application/pdf"
-    )
+            pdf.set_font("Arial", "", 12)
+            for _, r in grupo.iterrows():
+                pdf.cell(0, 8, f"- {r['producto']}", ln=True)
 
-    st.subheader("Orden de Compra")
+            pdf.ln(5)
 
-    # Mostrar únicamente las columnas deseadas
-    columnas_mostrar = ["producto", "lugar"]
-    st.dataframe(seleccionados[columnas_mostrar])
+        # Convertir PDF a bytes para descarga
+        pdf_bytes = pdf.output(dest="S").encode("latin1")
+
+        st.success("Orden de compra generada correctamente.")
+
+        # Botón de descarga
+        st.download_button(
+            label="Descargar Orden de Compra PDF",
+            data=pdf_bytes,
+            file_name="OrdenCompra.pdf",
+            mime="application/pdf"
+        )
+
+        # Mostrar tabla sin categoría ni selección
+        st.subheader("Orden de Compra")
+        st.dataframe(
+            seleccionados[["producto", "lugar"]].reset_index(drop=True)
+        )
