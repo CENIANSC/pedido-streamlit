@@ -17,8 +17,16 @@ supabase = create_client(url, key)
 # ==========================
 df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 
-st.title("Revisión de Pedido")
+col1, col2 = st.columns([4, 1])
 
+with col1:
+    st.title("Compras Cafetería UPPE")
+
+with col2:
+    generar_orden = st.button(
+        "📄 Generar Orden de Compra",
+        use_container_width=True
+    )
 # Diccionario para almacenar selecciones
 selecciones = {}
 
@@ -80,7 +88,7 @@ for tab, categoria in zip(tabs, categorias):
 # ==========================
 # Generar orden de compra
 # ==========================
-if st.button("Generar Orden de Compra"):
+if generar_orden:
 
     # Agregar selecciones al DataFrame
     df["Seleccion"] = df["producto"].map(selecciones)
