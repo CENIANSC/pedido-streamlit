@@ -19,10 +19,10 @@ df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 
 st.title("Revisión de Pedido")
 
-# Diccionario para almacenar las selecciones
+# Diccionario para almacenar selecciones
 selecciones = {}
 
-# Obtener categorías únicas y convertirlas a lista de texto
+# Obtener categorías únicas y convertirlas a lista
 categorias = (
     df["categoría"]
     .dropna()
@@ -31,10 +31,9 @@ categorias = (
     .tolist()
 )
 
-# Crear pestañas
+# Crear pestañas por categoría
 tabs = st.tabs(categorias)
 
-# Mostrar productos organizados por categoría
 for tab, categoria in zip(tabs, categorias):
 
     with tab:
@@ -43,34 +42,40 @@ for tab, categoria in zip(tabs, categorias):
 
         productos = df_categoria.to_dict("records")
 
-        # Mostrar 5 productos por fila
-        for fila_inicio in range(0, len(productos), 5):
+        # Mostrar 4 productos por fila
+        for fila_inicio in range(0, len(productos), 4):
 
-            columnas = st.columns(5)
+            columnas = st.columns(4)
 
             for col, producto in zip(
                 columnas,
-                productos[fila_inicio:fila_inicio + 5]
+                productos[fila_inicio:fila_inicio + 4]
             ):
 
                 with col:
 
                     st.markdown(
-                        f"**{producto['producto']}**"
+                        f"""
+                        <div style="text-align:center; font-size:16px; font-weight:bold;">
+                            {producto['producto']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
-
-                    if "lugar" in producto:
-                        st.caption(producto["lugar"])
 
                     seleccion = st.radio(
                         "",
                         ["NO", "SÍ"],
                         index=0,
                         horizontal=True,
-                        key=f"prod_{producto['producto']}"
+                        key=f"prod_{producto['producto']}",
+                        label_visibility="collapsed"
                     )
 
                     selecciones[producto["producto"]] = seleccion
+
+            # Espacio entre filas
+            st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================
 # Generar orden de compra
@@ -83,12 +88,19 @@ if st.button("Generar Orden de Compra"):
     # Filtrar productos seleccionados
     seleccionados = df[df["Seleccion"] == "SÍ"]
 
-    if seleccionados.empty:
+    if seleccionados.empty():
         st.warning("No se seleccionó ningún producto.")
 
     else:
 
+        # Mantener únicamente las columnas requeridas
+        orden_compra = seleccionados[
+            ["producto", "lugar"]
+        ].reset_index(drop=True)
+
+        # ==========================
         # Crear PDF
+        # ==========================
         pdf = FPDF()
         pdf.add_page()
 
@@ -116,21 +128,21 @@ if st.button("Generar Orden de Compra"):
         fecha_formal = f"{hoy.day} de {meses[hoy.month]} de {hoy.year}"
 
         pdf.set_font("Arial", "", 12)
-        pdf.cell(0, 8, f"Fecha: {fecha_formal}", ln=True, align="C")
+        pdf.cell(0, 8, fecha_formal, ln=True, align="C")
+
         pdf.ln(10)
 
-        # Agrupar por lugar
-        for lugar, grupo in seleccionados.groupby("lugar"):
+        # Encabezados de tabla
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(130, 10, "Producto", border=1, align="C")
+        pdf.cell(60, 10, "Lugar", border=1, align="C", ln=True)
 
-            pdf.set_font("Arial", "B", 12)
-            pdf.cell(0, 8, f"Lugar: {lugar}", ln=True)
+        # Contenido
+        pdf.set_font("Arial", "", 11)
 
-            pdf.set_font("Arial", "", 12)
-
-            for _, r in grupo.iterrows():
-                pdf.cell(0, 8, f"- {r['producto']}", ln=True)
-
-            pdf.ln(5)
+        for _, fila in orden_compra.iterrows():
+            pdf.cell(130, 8, str(fila["producto"]), border=1)
+            pdf.cell(60, 8, str(fila["lugar"]), border=1, ln=True)
 
         # Convertir PDF a bytes
         pdf_bytes = pdf.output(dest="S").encode("latin1")
@@ -145,9 +157,10 @@ if st.button("Generar Orden de Compra"):
             mime="application/pdf"
         )
 
-        # Mostrar tabla
+        # Mostrar vista previa
         st.subheader("Orden de Compra")
 
         st.dataframe(
-            seleccionados[["producto", "lugar"]].reset_index(drop=True)
+            orden_compra,
+            use_container_width=True
         )
