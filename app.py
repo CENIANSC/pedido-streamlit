@@ -140,17 +140,110 @@ if generar_orden:
 
         pdf.ln(10)
 
-        # Encabezados de tabla
-        pdf.set_font("Arial", "B", 10)
-        pdf.cell(130, 10, "Producto", border=1, align="C")
-        pdf.cell(60, 10, "Lugar", border=1, align="C", ln=True)
+# Agrupar productos por lugar
+lugares = list(orden_compra.groupby("lugar"))
 
-        # Contenido
-        pdf.set_font("Arial", "", 7)
+# Configuración de columnas del PDF
+ancho_columna = 90
+alto_renglon = 8
+margen_izquierdo = 10
+separacion_columnas = 10
 
-        for _, fila in orden_compra.iterrows():
-            pdf.cell(130, 8, str(fila["producto"]), border=1)
-            pdf.cell(60, 8, str(fila["lugar"]), border=1, ln=True)
+for i in range(0, len(lugares), 2):
+
+    grupo_izq = lugares[i]
+
+    grupo_der = lugares[i + 1] if i + 1 < len(lugares) else None
+
+    nombre_izq, productos_izq = grupo_izq
+    max_filas = len(productos_izq)
+
+    if grupo_der:
+        nombre_der, productos_der = grupo_der
+        max_filas = max(max_filas, len(productos_der))
+
+    y_inicio = pdf.get_y()
+
+    # -------------------
+    # Encabezado izquierda
+    # -------------------
+    pdf.set_xy(margen_izquierdo, y_inicio)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(
+        ancho_columna,
+        alto_renglon,
+        nombre_izq,
+        border=1,
+        align="C"
+    )
+
+    # -------------------
+    # Encabezado derecha
+    # -------------------
+    if grupo_der:
+        pdf.set_xy(
+            margen_izquierdo + ancho_columna + separacion_columnas,
+            y_inicio
+        )
+
+        pdf.cell(
+            ancho_columna,
+            alto_renglon,
+            nombre_der,
+            border=1,
+            align="C"
+        )
+
+    pdf.set_font("Arial", "", 11)
+
+    # -------------------
+    # Productos
+    # -------------------
+    for fila in range(max_filas):
+
+        y_actual = y_inicio + alto_renglon * (fila + 1)
+
+        # Columna izquierda
+        pdf.set_xy(margen_izquierdo, y_actual)
+
+        texto_izq = ""
+        if fila < len(productos_izq):
+            texto_izq = str(
+                productos_izq.iloc[fila]["producto"]
+            )
+
+        pdf.cell(
+            ancho_columna,
+            alto_renglon,
+            texto_izq,
+            border=1
+        )
+
+        # Columna derecha
+        if grupo_der:
+
+            pdf.set_xy(
+                margen_izquierdo + ancho_columna + separacion_columnas,
+                y_actual
+            )
+
+            texto_der = ""
+            if fila < len(productos_der):
+                texto_der = str(
+                    productos_der.iloc[fila]["producto"]
+                )
+
+            pdf.cell(
+                ancho_columna,
+                alto_renglon,
+                texto_der,
+                border=1
+            )
+
+    # Posicionar el cursor debajo del bloque
+    pdf.set_y(
+        y_inicio + alto_renglon * (max_filas + 2)
+    )
 
         # Convertir PDF a bytes
         pdf_bytes = pdf.output(dest="S").encode("latin1")
