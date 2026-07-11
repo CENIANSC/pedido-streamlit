@@ -146,7 +146,7 @@ if generar_orden:
         pdf.cell(60, 10, "Lugar", border=1, align="C", ln=True)
 
         # Contenido
-        pdf.set_font("Arial", "", 11)
+        pdf.set_font("Arial", "", 9)
 
         for _, fila in orden_compra.iterrows():
             pdf.cell(130, 8, str(fila["producto"]), border=1)
