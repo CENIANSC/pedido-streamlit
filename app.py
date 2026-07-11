@@ -23,11 +23,11 @@ df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 col1, col2, col3 = st.columns([4, 1.5, 2])
 
 with col1:
-    st.title("Compras Cafetería UPPE")
+    st.title("Compras Cafetería")
 
 with col2:
     generar_orden = st.button(
-        "📄 Generar Orden de Compra",
+        "📄 Generar OC",
         use_container_width=True
     )
 
