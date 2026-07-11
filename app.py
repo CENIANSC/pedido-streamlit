@@ -140,112 +140,87 @@ if generar_orden:
 
         pdf.ln(10)
 
-        # ==========================
-        # Agrupar productos por lugar
-        # ==========================
-        lugares = list(orden_compra.groupby("lugar"))
+        # =====================================
+# Configuración tipo periódico
+# =====================================
+margen_superior = pdf.get_y()
+ancho_columna = 90
+alto_renglon = 7
+separacion_columnas = 10
+separacion_tablas = 5
 
-        ancho_columna = 90
-        alto_renglon = 8
-        margen_izquierdo = 10
-        separacion = 10
+x_columna_1 = 10
+x_columna_2 = 110
 
-        for i in range(0, len(lugares), 2):
+columna_actual = 1
+x_actual = x_columna_1
+y_actual = margen_superior
 
-            grupo_izq = lugares[i]
-            grupo_der = lugares[i + 1] if i + 1 < len(lugares) else None
+for lugar, productos_lugar in lugares:
 
-            nombre_izq, productos_izq = grupo_izq
+    altura_tabla = (len(productos_lugar) + 1) * alto_renglon
 
-            if grupo_der:
-                nombre_der, productos_der = grupo_der
-                max_filas = max(
-                    len(productos_izq),
-                    len(productos_der)
-                )
-            else:
-                max_filas = len(productos_izq)
+    # ¿Cabe en la columna actual?
+    if y_actual + altura_tabla > 270:
 
-            y_inicio = pdf.get_y()
+        # Si estábamos en la columna izquierda, mover a la derecha
+        if columna_actual == 1:
+            columna_actual = 2
+            x_actual = x_columna_2
+            y_actual = margen_superior
 
-            # Encabezado izquierdo
-            pdf.set_xy(margen_izquierdo, y_inicio)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(
-                ancho_columna,
-                alto_renglon,
-                str(nombre_izq),
-                border=1,
-                align="C"
-            )
+        # Si ya estábamos en la derecha, nueva página
+        else:
+            pdf.add_page()
 
-            # Encabezado derecho
-            if grupo_der:
-                pdf.set_xy(
-                    margen_izquierdo + ancho_columna + separacion,
-                    y_inicio
-                )
-
-                pdf.cell(
-                    ancho_columna,
-                    alto_renglon,
-                    str(nombre_der),
-                    border=1,
-                    align="C"
-                )
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(0, 10, "ORDEN DE COMPRA", ln=True, align="C")
 
             pdf.set_font("Arial", "", 10)
+            pdf.cell(0, 8, fecha_formal, ln=True, align="C")
+            pdf.ln(10)
 
-            # Productos
-            for fila in range(max_filas):
+            margen_superior = pdf.get_y()
 
-                y_actual = y_inicio + alto_renglon * (fila + 1)
+            columna_actual = 1
+            x_actual = x_columna_1
+            y_actual = margen_superior
 
-                # Columna izquierda
-                pdf.set_xy(margen_izquierdo, y_actual)
+    # ======================
+    # Encabezado
+    # ======================
+    pdf.set_xy(x_actual, y_actual)
 
-                texto_izq = ""
-                if fila < len(productos_izq):
-                    texto_izq = str(
-                        productos_izq.iloc[fila]["producto"]
-                    )
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(
+        ancho_columna,
+        alto_renglon,
+        str(lugar),
+        border=1,
+        align="C"
+    )
 
-                pdf.cell(
-                    ancho_columna,
-                    alto_renglon,
-                    texto_izq,
-                    border=1
-                )
+    # ======================
+    # Productos
+    # ======================
+    pdf.set_font("Arial", "", 10)
 
-                # Columna derecha
-                if grupo_der:
+    for i, (_, fila) in enumerate(productos_lugar.iterrows()):
 
-                    pdf.set_xy(
-                        margen_izquierdo + ancho_columna + separacion,
-                        y_actual
-                    )
+        pdf.set_xy(
+            x_actual,
+            y_actual + alto_renglon * (i + 1)
+        )
 
-                    texto_der = ""
+        pdf.cell(
+            ancho_columna,
+            alto_renglon,
+            str(fila["producto"]),
+            border=1
+        )
 
-                    if fila < len(productos_der):
-                        texto_der = str(
-                            productos_der.iloc[fila]["producto"]
-                        )
-
-                    pdf.cell(
-                        ancho_columna,
-                        alto_renglon,
-                        texto_der,
-                        border=1
-                    )
-
-            pdf.set_y(
-                y_inicio + alto_renglon * (max_filas + 2)
-            )
-
-            # Salto de página automático
-            if pdf.get_y() > 250:
-                pdf.add_page()
+    # Posición para la siguiente tabla
+    y_actual += altura_tabla + separacion_tablas
 
         # Convertir PDF a bytes
         pdf_bytes = pdf.output(dest="S").encode("latin1")
