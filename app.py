@@ -18,21 +18,52 @@ df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 st.title("Revisión de Pedido")
 
 # Crear opciones de selección
-selecciones = []
-for i, row in df.iterrows():
-    decision = st.radio(
-        f"{row['producto']} ({row['lugar']})",
-        ["NO", "SÍ"],
-        index=0,
-        key=i
-    )
-    selecciones.append(decision)
+# Diccionario para almacenar las selecciones
+selecciones = {}
+
+# Obtener categorías únicas
+categorias = df["categoría"].dropna().unique()
+
+# Crear pestañas
+tabs = st.tabs(categorias)
+
+for tab, categoria in zip(tabs, categorias):
+
+    with tab:
+
+        df_categoria = df[df["categoria"] == categoria]
+
+        productos = df_categoria.to_dict("records")
+
+        # Mostrar 5 productos por fila
+        for fila_inicio in range(0, len(productos), 5):
+
+            columnas = st.columns(5)
+
+            for col, producto in zip(
+                    columnas,
+                    productos[fila_inicio:fila_inicio+5]):
+
+                with col:
+                    st.markdown(
+                        f"**{producto['producto']}**  \n"
+                        f"{producto['lugar']}"
+                    )
+
+                    seleccion = st.radio(
+                        "",
+                        ["NO", "SÍ"],
+                        index=0,
+                        key=f"prod_{producto['producto']}"
+                    )
+
+                    selecciones[producto['producto']] = seleccion
 
 # Generar orden de compra
 if st.button("Generar Orden de Compra"):
 
     # Agregar selecciones al DataFrame
-    df["Seleccion"] = selecciones
+    df["Seleccion"] = df["producto"].map(selecciones)
 
     # Filtrar únicamente los productos seleccionados
     seleccionados = df[df["Seleccion"] == "SÍ"]
