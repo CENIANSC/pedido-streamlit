@@ -96,7 +96,7 @@ if generar_orden:
     # Filtrar productos seleccionados
     seleccionados = df[df["Seleccion"] == "SÍ"]
 
-    if seleccionados.empty():
+    if seleccionados.empty:
         st.warning("No se seleccionó ningún producto.")
 
     else:
