@@ -113,7 +113,7 @@ if generar_orden:
         pdf.add_page()
 
         # Título
-        pdf.set_font("Arial", "B", 16)
+        pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 10, "ORDEN DE COMPRA", ln=True, align="C")
 
         # Fecha
@@ -135,18 +135,18 @@ if generar_orden:
         hoy = datetime.now()
         fecha_formal = f"{hoy.day} de {meses[hoy.month]} de {hoy.year}"
 
-        pdf.set_font("Arial", "", 12)
+        pdf.set_font("Arial", "", 10)
         pdf.cell(0, 8, fecha_formal, ln=True, align="C")
 
         pdf.ln(10)
 
         # Encabezados de tabla
-        pdf.set_font("Arial", "B", 12)
+        pdf.set_font("Arial", "B", 10)
         pdf.cell(130, 10, "Producto", border=1, align="C")
         pdf.cell(60, 10, "Lugar", border=1, align="C", ln=True)
 
         # Contenido
-        pdf.set_font("Arial", "", 9)
+        pdf.set_font("Arial", "", 7)
 
         for _, fila in orden_compra.iterrows():
             pdf.cell(130, 8, str(fila["producto"]), border=1)
