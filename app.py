@@ -20,7 +20,7 @@ df = pd.read_excel("Pedido.xlsx", sheet_name="Hoja1")
 # ==========================
 # Encabezado
 # ==========================
-col1, col2 = st.columns([4, 1])
+col1, col2, col3 = st.columns([4, 1.5, 2])
 
 with col1:
     st.title("Compras Cafetería UPPE")
@@ -31,6 +31,9 @@ with col2:
         use_container_width=True
     )
 
+with col3:
+    mensaje_placeholder = st.empty()
+    descarga_placeholder = st.empty()
 # ==========================
 # Selecciones
 # ==========================
@@ -324,17 +327,17 @@ if generar_orden:
             .encode("latin1")
         )
 
-        st.success(
-            "Orden de compra generada correctamente."
+        mensaje_placeholder.success(
+        "Orden generada"
         )
 
-        st.download_button(
-            label="Descargar Orden de Compra PDF",
-            data=pdf_bytes,
-            file_name="OrdenCompra.pdf",
-            mime="application/pdf"
+        descarga_placeholder.download_button(
+        label="📥 Descargar PDF",
+        data=pdf_bytes,
+        file_name="OrdenCompra.pdf",
+        mime="application/pdf",
+        use_container_width=True
         )
-
         st.subheader(
             "Vista previa"
         )
