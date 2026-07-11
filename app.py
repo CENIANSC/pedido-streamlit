@@ -106,7 +106,7 @@ if generar_orden:
             ["producto", "lugar"]
         ].reset_index(drop=True)
 
-        # ==========================
+          # ==========================
         # Crear PDF
         # ==========================
         pdf = FPDF()
@@ -140,117 +140,118 @@ if generar_orden:
 
         pdf.ln(10)
 
-# Agrupar productos por lugar
-lugares = list(orden_compra.groupby("lugar"))
+        # ==========================
+        # Agrupar productos por lugar
+        # ==========================
+        lugares = list(orden_compra.groupby("lugar"))
 
-# Configuración de columnas del PDF
-ancho_columna = 90
-alto_renglon = 8
-margen_izquierdo = 10
-separacion_columnas = 10
+        ancho_columna = 90
+        alto_renglon = 8
+        margen_izquierdo = 10
+        separacion = 10
 
-for i in range(0, len(lugares), 2):
+        for i in range(0, len(lugares), 2):
 
-    grupo_izq = lugares[i]
+            grupo_izq = lugares[i]
+            grupo_der = lugares[i + 1] if i + 1 < len(lugares) else None
 
-    grupo_der = lugares[i + 1] if i + 1 < len(lugares) else None
+            nombre_izq, productos_izq = grupo_izq
 
-    nombre_izq, productos_izq = grupo_izq
-    max_filas = len(productos_izq)
-
-    if grupo_der:
-        nombre_der, productos_der = grupo_der
-        max_filas = max(max_filas, len(productos_der))
-
-    y_inicio = pdf.get_y()
-
-    # -------------------
-    # Encabezado izquierda
-    # -------------------
-    pdf.set_xy(margen_izquierdo, y_inicio)
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(
-        ancho_columna,
-        alto_renglon,
-        nombre_izq,
-        border=1,
-        align="C"
-    )
-
-    # -------------------
-    # Encabezado derecha
-    # -------------------
-    if grupo_der:
-        pdf.set_xy(
-            margen_izquierdo + ancho_columna + separacion_columnas,
-            y_inicio
-        )
-
-        pdf.cell(
-            ancho_columna,
-            alto_renglon,
-            nombre_der,
-            border=1,
-            align="C"
-        )
-
-    pdf.set_font("Arial", "", 11)
-
-    # -------------------
-    # Productos
-    # -------------------
-    for fila in range(max_filas):
-
-        y_actual = y_inicio + alto_renglon * (fila + 1)
-
-        # Columna izquierda
-        pdf.set_xy(margen_izquierdo, y_actual)
-
-        texto_izq = ""
-        if fila < len(productos_izq):
-            texto_izq = str(
-                productos_izq.iloc[fila]["producto"]
-            )
-
-        pdf.cell(
-            ancho_columna,
-            alto_renglon,
-            texto_izq,
-            border=1
-        )
-
-        # Columna derecha
-        if grupo_der:
-
-            pdf.set_xy(
-                margen_izquierdo + ancho_columna + separacion_columnas,
-                y_actual
-            )
-
-            texto_der = ""
-            if fila < len(productos_der):
-                texto_der = str(
-                    productos_der.iloc[fila]["producto"]
+            if grupo_der:
+                nombre_der, productos_der = grupo_der
+                max_filas = max(
+                    len(productos_izq),
+                    len(productos_der)
                 )
+            else:
+                max_filas = len(productos_izq)
 
+            y_inicio = pdf.get_y()
+
+            # Encabezado izquierdo
+            pdf.set_xy(margen_izquierdo, y_inicio)
+            pdf.set_font("Arial", "B", 11)
             pdf.cell(
                 ancho_columna,
                 alto_renglon,
-                texto_der,
-                border=1
+                str(nombre_izq),
+                border=1,
+                align="C"
             )
 
-    # Posicionar el cursor debajo del bloque
-    pdf.set_y(
-        y_inicio + alto_renglon * (max_filas + 2)
-    )
+            # Encabezado derecho
+            if grupo_der:
+                pdf.set_xy(
+                    margen_izquierdo + ancho_columna + separacion,
+                    y_inicio
+                )
+
+                pdf.cell(
+                    ancho_columna,
+                    alto_renglon,
+                    str(nombre_der),
+                    border=1,
+                    align="C"
+                )
+
+            pdf.set_font("Arial", "", 10)
+
+            # Productos
+            for fila in range(max_filas):
+
+                y_actual = y_inicio + alto_renglon * (fila + 1)
+
+                # Columna izquierda
+                pdf.set_xy(margen_izquierdo, y_actual)
+
+                texto_izq = ""
+                if fila < len(productos_izq):
+                    texto_izq = str(
+                        productos_izq.iloc[fila]["producto"]
+                    )
+
+                pdf.cell(
+                    ancho_columna,
+                    alto_renglon,
+                    texto_izq,
+                    border=1
+                )
+
+                # Columna derecha
+                if grupo_der:
+
+                    pdf.set_xy(
+                        margen_izquierdo + ancho_columna + separacion,
+                        y_actual
+                    )
+
+                    texto_der = ""
+
+                    if fila < len(productos_der):
+                        texto_der = str(
+                            productos_der.iloc[fila]["producto"]
+                        )
+
+                    pdf.cell(
+                        ancho_columna,
+                        alto_renglon,
+                        texto_der,
+                        border=1
+                    )
+
+            pdf.set_y(
+                y_inicio + alto_renglon * (max_filas + 2)
+            )
+
+            # Salto de página automático
+            if pdf.get_y() > 250:
+                pdf.add_page()
 
         # Convertir PDF a bytes
         pdf_bytes = pdf.output(dest="S").encode("latin1")
 
         st.success("Orden de compra generada correctamente.")
 
-        # Descargar PDF
         st.download_button(
             label="Descargar Orden de Compra PDF",
             data=pdf_bytes,
@@ -258,7 +259,6 @@ for i in range(0, len(lugares), 2):
             mime="application/pdf"
         )
 
-        # Mostrar vista previa
         st.subheader("Orden de Compra")
 
         st.dataframe(
