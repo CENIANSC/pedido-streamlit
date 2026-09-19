@@ -40,7 +40,7 @@ with col3:
 selecciones = {}
 
 categorias = (
-    df["categoría"]
+    df["Categoría"]
     .dropna()
     .astype(str)
     .unique()
