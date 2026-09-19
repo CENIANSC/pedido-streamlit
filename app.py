@@ -309,7 +309,7 @@ if generar_orden:
                     ancho_columna,
                     alto_renglon,
                     str(
-                        fila["producto"]
+                        fila["Producto"]
                     ),
                     border=1
                 )
