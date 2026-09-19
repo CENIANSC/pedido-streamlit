@@ -54,7 +54,7 @@ for tab, categoria in zip(tabs, categorias):
     with tab:
 
         df_categoria = df[
-            df["categoría"].astype(str) == categoria
+            df["Categoría"].astype(str) == categoria
         ]
 
         productos = df_categoria.to_dict("records")
