@@ -2,14 +2,6 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
-from supabase import create_client
-
-# ==========================
-# Supabase
-# ==========================
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_KEY"]
-supabase = create_client(url, key)
 
 # ==========================
 # Leer archivo Excel
@@ -71,28 +63,8 @@ for tab, categoria in zip(tabs, categorias):
                         key=f"cant_{producto['Producto']}"
                     )
 
-                    precio_total = st.number_input(
-                        "Precio Total",
-                        min_value=0.0,
-                        step=0.5,
-                        value=0.0,
-                        key=f"precio_{producto['Producto']}"
-                    )
-
-                    # Consultar último precio registrado en Supabase
-                    ultimo_precio = supabase.table("compras") \
-                        .select("costo_unitario") \
-                        .eq("producto", producto["Producto"]) \
-                        .order("fecha", desc=True) \
-                        .limit(1) \
-                        .execute()
-
-                    if ultimo_precio.data:
-                        st.caption(f"Último precio: ${ultimo_precio.data[0]['costo_unitario']} por {unidad}")
-
                     selecciones[producto["Producto"]] = {
                         "cantidad": cantidad,
-                        "precio_total": precio_total,
                         "unidad": unidad,
                         "proveedor": producto.get("Proveedor", "")
                     }
@@ -110,24 +82,10 @@ if generar_orden:
                 "Producto": prod,
                 "Unidad": datos["unidad"],
                 "Cantidad": datos["cantidad"],
-                "Precio Total": datos["precio_total"],
-                "Proveedor": datos["proveedor"],
-                "Costo Unitario": datos["precio_total"] / datos["cantidad"] if datos["cantidad"] else 0
+                "Proveedor": datos["proveedor"]
             }
             for prod, datos in seleccionados.items()
         ])
-
-        # Guardar en Supabase
-        for _, fila in orden_compra.iterrows():
-            supabase.table("compras").insert({
-                "fecha": datetime.now().isoformat(),
-                "producto": fila["Producto"],
-                "unidad": fila["Unidad"],
-                "cantidad": fila["Cantidad"],
-                "precio_total": fila["Precio Total"],
-                "costo_unitario": fila["Costo Unitario"],
-                "proveedor": fila["Proveedor"]
-            }).execute()
 
         # Crear PDF
         pdf = FPDF()
