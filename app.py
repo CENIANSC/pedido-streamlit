@@ -108,7 +108,7 @@ for tab, categoria in zip(tabs, categorias):
 # ==========================
 if generar_orden:
 
-    df["Seleccion"] = df["producto"].map(selecciones)
+    df["Seleccion"] = df["Producto"].map(selecciones)
 
     seleccionados = df[
         df["Seleccion"] == "SÍ"
@@ -123,7 +123,7 @@ if generar_orden:
     else:
 
         orden_compra = seleccionados[
-            ["producto", "lugar"]
+            ["Producto", "Proveedor"]
         ].reset_index(drop=True)
 
         # ==========================
