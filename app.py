@@ -189,7 +189,7 @@ if generar_orden:
         # Configuración columnas
         # ==========================
         lugares = list(
-            orden_compra.groupby("lugar")
+            orden_compra.groupby("Proveedor")
         )
 
         margen_superior = pdf.get_y()
