@@ -82,7 +82,7 @@ for tab, categoria in zip(tabs, categorias):
                             align-items:center;
                             justify-content:center;
                         ">
-                            {producto['producto']}
+                            {producto['Producto']}
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -93,12 +93,12 @@ for tab, categoria in zip(tabs, categorias):
                         ["NO", "SÍ"],
                         horizontal=True,
                         index=0,
-                        key=f"prod_{producto['producto']}",
+                        key=f"prod_{producto['Producto']}",
                         label_visibility="collapsed"
                     )
 
                     selecciones[
-                        producto["producto"]
+                        producto["Producto"]
                     ] = seleccion
 
             st.markdown("<br>", unsafe_allow_html=True)
